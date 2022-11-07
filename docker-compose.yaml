@@ -1,0 +1,19 @@
+version: '3.6'
+
+services:
+  api:
+    build: ./
+    volumes:
+      - /var/www/html/vendor
+      - ./:/var/www/html
+    ports:
+      - '80:80'
+  mysql:
+    image: 'mysql'
+    volumes:
+      - ./build/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: paytop
+    ports:
+      - '3306:3306'
