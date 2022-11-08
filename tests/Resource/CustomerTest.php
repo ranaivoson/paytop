@@ -2,6 +2,8 @@
 
 namespace App\Tests\Resource;
 
+use App\Repository\CustomerRepository;
+use App\Repository\UserRepository;
 use App\Tests\AbstractTest;
 use Exception;
 use Hautelook\AliceBundle\PhpUnit\RefreshDatabaseTrait;
@@ -30,7 +32,7 @@ class CustomerTest extends AbstractTest
             'last_name' => 'Doe',
             'email' => 'test@test.fr',
             'phone_number' => '0761109876',
-        ]]);
+        ], 'auth_bearer' => $this->getPartnerToken()]);
 
         $this->assertResponseStatusCodeSame(201);
         $this->assertResponseHeaderSame('content-type', 'application/ld+json; charset=utf-8');
@@ -60,4 +62,54 @@ class CustomerTest extends AbstractTest
 //        $transport = $this->getContainer()->get('messenger.transport.async_priority_normal');
 //        $this->assertCount(1, $transport->getSent());
 //    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws Exception
+     * @throws DecodingExceptionInterface
+     */
+    public function testRetrieveOnlyPartnerClients(){
+        $this->client = static::createClient();
+        $container = static::getContainer();
+
+        $userRepository = $container->get(UserRepository::class);
+        $clientRepository = $container->get(CustomerRepository::class);
+
+        $partner = $userRepository->findOneBy([
+            'email' => 'keira.beatty@hotmail.com'
+        ]);
+
+        $customers = $clientRepository->findBy([
+            'partner' => $partner
+        ]);
+
+        $response = $this->client->request('GET', '/clients', ['auth_bearer' => $this->getPartnerToken()]);
+
+        $json = $response->toArray();
+
+        self::assertSame(count($json['hydra:member']), count($customers));
+
+        foreach ($json['hydra:member'] as $item) {
+            $c = $clientRepository->find($item['id']);
+            self::assertSame($c->getPartner()->getId(), $partner->getId());
+        }
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws Exception
+     */
+    public function testRetrieveAllClientsWhenUserIsAdmin(){
+
+        $container = static::getContainer();
+        $clientRepository = $container->get(CustomerRepository::class);
+
+        $response = $this->client->request('GET', '/clients', ['auth_bearer' => $this->getAdminToken()]);
+
+        $json = $response->toArray();
+
+        $customers = $clientRepository->findAll();
+        self::assertSame(count($json['hydra:member']), count($customers));
+    }
 }

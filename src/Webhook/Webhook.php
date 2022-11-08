@@ -3,8 +3,11 @@
 namespace App\Webhook;
 
 use App\Entity\Customer;
+use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -21,8 +24,9 @@ class Webhook implements WebhookInterface
      */
     public function send(Customer $customer)
     {
-        $normalizer = new ObjectNormalizer();
-        $data = $normalizer->normalize($customer);
+        $normalizer = new ObjectNormalizer(null, null, null, new ReflectionExtractor());
+        $serializer = new Serializer([new DateTimeNormalizer(), $normalizer]);
+        $data = $serializer->normalize($customer, null, ['groups' => 'read']);
         $this->httpClient->request('POST', self::URL, [
             'json' => $data
         ]);
