@@ -3,37 +3,51 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Post;
 use App\Repository\CustomerRepository;
+use App\State\CustomerProcessor;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    shortName: 'Client',
+    normalizationContext: ['groups' => ['read']],
+    denormalizationContext: ['groups' => ['write']],
+    processor: CustomerProcessor::class
+)]
 class Customer
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['read'])]
     private ?int $id = null;
 
     #[Assert\NotBlank]
     #[ORM\Column(length: 255)]
+    #[Groups(['read', 'write'])]
     private ?string $firstName = null;
 
     #[Assert\NotBlank]
     #[ORM\Column(length: 255)]
+    #[Groups(['read', 'write'])]
     private ?string $lastName = null;
 
     #[Assert\Email]
     #[ORM\Column(length: 255)]
+    #[Groups(['read', 'write'])]
     private ?string $email = null;
 
     #[Assert\NotBlank]
     #[ORM\Column(length: 255)]
+    #[Groups(['read', 'write'])]
     private ?string $phoneNumber = null;
 
     #[Assert\DateTime]
     #[ORM\Column]
+    #[Groups(['read'])]
     private ?\DateTimeImmutable $createdAt = null;
 
     public function getId(): ?int

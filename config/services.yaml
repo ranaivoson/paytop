@@ -25,3 +25,6 @@ services:
 
     'Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter': ~
 
+    App\State\CustomerProcessor:
+        bind:
+            $decorated: '@api_platform.doctrine.orm.state.persist_processor'
