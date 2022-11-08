@@ -4,9 +4,6 @@ namespace App\Tests;
 
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
 use ApiPlatform\Symfony\Bundle\Test\Client;
-use App\Repository\CustomerRepository;
-use App\Repository\UserRepository;
-use Exception;
 use Hautelook\AliceBundle\PhpUnit\RecreateDatabaseTrait;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
@@ -72,5 +69,11 @@ class AbstractTest extends ApiTestCase
         $json = $response->toArray();
 
         return $json['token'];
+    }
+
+    public function testNonAuthorized()
+    {
+        $this->client->request('GET', '/clients');
+        $this->assertResponseStatusCodeSame(401);
     }
 }

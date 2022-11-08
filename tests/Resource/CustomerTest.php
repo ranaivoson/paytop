@@ -73,13 +73,13 @@ class CustomerTest extends AbstractTest
         $container = static::getContainer();
 
         $userRepository = $container->get(UserRepository::class);
-        $clientRepository = $container->get(CustomerRepository::class);
+        $customerRepository = $container->get(CustomerRepository::class);
 
         $partner = $userRepository->findOneBy([
             'email' => 'keira.beatty@hotmail.com'
         ]);
 
-        $customers = $clientRepository->findBy([
+        $customers = $customerRepository->findBy([
             'partner' => $partner
         ]);
 
@@ -90,8 +90,9 @@ class CustomerTest extends AbstractTest
         self::assertSame(count($json['hydra:member']), count($customers));
 
         foreach ($json['hydra:member'] as $item) {
-            $c = $clientRepository->find($item['id']);
+            $c = $customerRepository->find($item['id']);
             self::assertSame($c->getPartner()->getId(), $partner->getId());
+            self::assertArrayNotHasKey('created_at', $item);
         }
     }
 
@@ -111,5 +112,63 @@ class CustomerTest extends AbstractTest
 
         $customers = $clientRepository->findAll();
         self::assertSame(count($json['hydra:member']), count($customers));
+    }
+
+    /**
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws Exception
+     */
+    public function testAdminHasAccessCreatedValue()
+    {
+        $container = static::getContainer();
+        $customerRepository = $container->get(CustomerRepository::class);
+
+        $customer = $customerRepository->findOneBy([
+        ]);
+
+        $response = $this->client->request(
+            'GET',
+            '/clients/'.$customer->getId(),
+            ['auth_bearer' => $this->getAdminToken()]
+        );
+
+        $json = $response->toArray();
+        self::assertArrayHasKey('created_at', $json);
+    }
+
+    /**
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws Exception
+     */
+    public function testPartnerHasNotAccessCreatedValue()
+    {
+        $container = static::getContainer();
+        $userRepository = $container->get(UserRepository::class);
+        $customerRepository = $container->get(CustomerRepository::class);
+
+        $partner = $userRepository->findOneBy([
+            'email' => 'keira.beatty@hotmail.com'
+        ]);
+
+        $customer = $customerRepository->findOneBy([
+            'partner'=> $partner
+        ]);
+
+        $response = $this->client->request(
+            'GET',
+            '/clients/'.$customer->getId(),
+            ['auth_bearer' => $this->getPartnerToken()]
+        );
+
+        $json = $response->toArray();
+        self::assertArrayNotHasKey('created_at', $json);
     }
 }

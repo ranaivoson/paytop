@@ -2,8 +2,8 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
-use ApiPlatform\Metadata\Post;
 use App\Repository\CustomerRepository;
 use App\State\CustomerProcessor;
 use Doctrine\ORM\Mapping as ORM;
@@ -27,27 +27,28 @@ class Customer
 
     #[Assert\NotBlank]
     #[ORM\Column(length: 255)]
-    #[Groups(['read', 'write'])]
+    #[Groups(['read', 'write', 'webhook'])]
     private ?string $firstName = null;
 
     #[Assert\NotBlank]
     #[ORM\Column(length: 255)]
-    #[Groups(['read', 'write'])]
+    #[Groups(['read', 'write', 'webhook'])]
     private ?string $lastName = null;
 
     #[Assert\Email]
     #[ORM\Column(length: 255)]
-    #[Groups(['read', 'write'])]
+    #[Groups(['read', 'write', 'webhook'])]
     private ?string $email = null;
 
     #[Assert\NotBlank]
     #[ORM\Column(length: 255)]
-    #[Groups(['read', 'write'])]
+    #[Groups(['read', 'write', 'webhook'])]
     private ?string $phoneNumber = null;
 
     #[Assert\DateTime]
     #[ORM\Column]
-    #[Groups(['read'])]
+    #[Groups(['read', 'webhook'])]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN')")]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'customers')]

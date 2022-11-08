@@ -4,7 +4,6 @@ namespace App\State;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
-use DateTimeImmutable;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 final class CustomerProcessor implements ProcessorInterface
