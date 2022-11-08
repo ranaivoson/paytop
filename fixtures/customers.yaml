@@ -1,0 +1,8 @@
+App\Entity\Customer:
+  client{1..10}:
+    firstName: <firstName()>
+    lastName: <lastName()>
+    email: <email()>
+    phoneNumber: 0766768767
+    createdAt: <(new DateTimeImmutable('now'))>
+    partner: '@partner*'
