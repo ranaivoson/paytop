@@ -50,6 +50,9 @@ class Customer
     #[Groups(['read'])]
     private ?\DateTimeImmutable $createdAt = null;
 
+    #[ORM\ManyToOne(inversedBy: 'customers')]
+    private ?User $partner = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -111,6 +114,18 @@ class Customer
     public function setCreatedAt(\DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getPartner(): ?User
+    {
+        return $this->partner;
+    }
+
+    public function setPartner(?User $partner): self
+    {
+        $this->partner = $partner;
 
         return $this;
     }

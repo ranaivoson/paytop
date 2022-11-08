@@ -19,7 +19,6 @@ final class CustomerProcessor implements ProcessorInterface
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = [])
     {
         $this->bus->dispatch($data);
-        $data->setCreatedAt(new DateTimeImmutable());
         return $this->decorated->process($data, $operation, $uriVariables, $context);
     }
 }

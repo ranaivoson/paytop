@@ -1,0 +1,15 @@
+App\Entity\User:
+  admin:
+    email: admin@example.com
+    password: <hashPassword(@admin, 'password')>
+    roles: [ROLE_ADMIN]
+
+  partner_1:
+    email: keira.beatty@hotmail.com
+    password: <hashPassword(@partner_1, 'password')>
+    roles: [ROLE_PARTNER]
+
+  partner_2:
+    email: wondricka@yahoo.com
+    password: <hashPassword(@partner_2, 'password')>
+    roles: [ROLE_PARTNER]
