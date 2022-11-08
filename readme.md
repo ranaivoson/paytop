@@ -9,3 +9,7 @@ docker-compose up --build -d
 docker-compose exec api bin/console hautelook:fixtures:load
 ```
 #### puis choisissez 'y'
+
+```shell
+docker-compose exec api bin/console lexik:jwt:generate-keypair
+```
