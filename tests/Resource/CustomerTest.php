@@ -12,6 +12,7 @@ use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use function PHPUnit\Framework\assertEquals;
 
 class CustomerTest extends AbstractTest
 {
@@ -34,10 +35,10 @@ class CustomerTest extends AbstractTest
             'phone_number' => '0761109876',
         ], 'auth_bearer' => $this->getPartnerToken()]);
 
-        $this->assertResponseStatusCodeSame(201);
-        $this->assertResponseHeaderSame('content-type', 'application/ld+json; charset=utf-8');
+        self::assertResponseStatusCodeSame(201);
+        self::assertResponseHeaderSame('content-type', 'application/ld+json; charset=utf-8');
 
-        $this->assertJsonContains([
+        self::assertJsonContains([
             '@context' => '/contexts/Client',
             '@type' => 'Client',
             'first_name' => 'John',
@@ -47,28 +48,30 @@ class CustomerTest extends AbstractTest
         ]);
     }
 
-//    /**
-//     * @throws TransportExceptionInterface
-//     * @throws Exception
-//     */
-//    public function testWebhook(){
-//        $this->client->request('POST', '/clients', ['json' => [
-//            'first_name' => 'John',
-//            'last_name' => 'Doe',
-//            'email' => 'test@test.fr',
-//            'phone_number' => '0761109876',
-//        ]]);
-//
-//        $transport = $this->getContainer()->get('messenger.transport.async_priority_normal');
-//        $this->assertCount(1, $transport->getSent());
-//    }
+    /**
+     * @throws TransportExceptionInterface
+     * @throws Exception|DecodingExceptionInterface
+     */
+    public function testWebhook(): void
+    {
+        $this->client->request('POST', '/clients', ['json' => [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'test@test.fr',
+            'phone_number' => '0761109876',
+        ], 'auth_bearer' => $this->getPartnerToken()]);
+
+        $transport = self::getContainer()->get('messenger.transport.async_priority_normal');
+        $this->assertCount(1, $transport->getSent());
+    }
 
     /**
      * @throws TransportExceptionInterface
      * @throws Exception
      * @throws DecodingExceptionInterface
      */
-    public function testRetrieveOnlyPartnerClients(){
+    public function testRetrieveOnlyPartnerClients(): void
+    {
         $this->client = static::createClient();
         $container = static::getContainer();
 
@@ -87,7 +90,7 @@ class CustomerTest extends AbstractTest
 
         $json = $response->toArray();
 
-        self::assertSame(count($json['hydra:member']), count($customers));
+        self::assertCount(count($json['hydra:member']), $customers);
 
         foreach ($json['hydra:member'] as $item) {
             $c = $customerRepository->find($item['id']);
@@ -101,7 +104,8 @@ class CustomerTest extends AbstractTest
      * @throws DecodingExceptionInterface
      * @throws Exception
      */
-    public function testRetrieveAllClientsWhenUserIsAdmin(){
+    public function testRetrieveAllClientsWhenUserIsAdmin(): void
+    {
 
         $container = static::getContainer();
         $clientRepository = $container->get(CustomerRepository::class);
@@ -111,7 +115,7 @@ class CustomerTest extends AbstractTest
         $json = $response->toArray();
 
         $customers = $clientRepository->findAll();
-        self::assertSame(count($json['hydra:member']), count($customers));
+        self::assertCount(count($json['hydra:member']), $customers);
     }
 
     /**
@@ -122,7 +126,7 @@ class CustomerTest extends AbstractTest
      * @throws ServerExceptionInterface
      * @throws Exception
      */
-    public function testAdminHasAccessCreatedValue()
+    public function testAdminHasAccessCreatedValue(): void
     {
         $container = static::getContainer();
         $customerRepository = $container->get(CustomerRepository::class);
@@ -148,7 +152,7 @@ class CustomerTest extends AbstractTest
      * @throws ServerExceptionInterface
      * @throws Exception
      */
-    public function testPartnerHasNotAccessCreatedValue()
+    public function testPartnerHasNotAccessCreatedValue(): void
     {
         $container = static::getContainer();
         $userRepository = $container->get(UserRepository::class);
@@ -170,5 +174,41 @@ class CustomerTest extends AbstractTest
 
         $json = $response->toArray();
         self::assertArrayNotHasKey('created_at', $json);
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws Exception
+     */
+    public function testCustomerCreatedBelongToTheUserConnected(): void
+    {
+        $container = static::getContainer();
+        $userRepository = $container->get(UserRepository::class);
+        $customerRepository = $container->get(CustomerRepository::class);
+
+        $partner = $userRepository->findOneBy([
+            'email' => 'keira.beatty@hotmail.com'
+        ]);
+
+        $customerEmail = 'test_id@test.fr';
+
+        $this->client->request('POST', '/clients', ['json' => [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => $customerEmail,
+            'phone_number' => '0761109876',
+            'partner_id' => 1
+        ], 'auth_bearer' => $this->getPartnerToken()]);
+
+        $customer = $customerRepository->findOneBy([
+            'email' => $customerEmail
+        ]);
+
+        self::assertSame($customer->getPartner()->getId(), $partner->getId());
+        self::assertNotEquals($customer->getPartner()->getId(), $partner->getId() + 1);
     }
 }

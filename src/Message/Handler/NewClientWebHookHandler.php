@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Webhook\Handler;
+namespace App\Message\Handler;
 
 use App\Entity\Customer;
 use App\Webhook\WebhookInterface;

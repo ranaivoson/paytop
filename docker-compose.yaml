@@ -16,4 +16,4 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: paytop
     ports:
-      - '3306:3306'
+      - '30306:3306'
