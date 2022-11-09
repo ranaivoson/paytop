@@ -31,8 +31,8 @@ class Webhook implements WebhookInterface
         $normalizer = new ObjectNormalizer($classMetadataFactory, null, null, new ReflectionExtractor());
         $serializer = new Serializer([new DateTimeNormalizer(), $normalizer]);
         $data = $serializer->normalize($customer, null, ['groups' => 'webhook']);
-//        $this->httpClient->request('POST', self::URL, [
-//            'json' => $data
-//        ]);
+        $this->httpClient->request('POST', self::URL, [
+            'json' => $data
+        ]);
     }
 }
